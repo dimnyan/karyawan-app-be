@@ -30,7 +30,8 @@ CREATE TYPE "criteria" AS ENUM (
 CREATE TYPE "applied_status" AS ENUM (
     'applied',
     'approved_by_hrd',
-    'pass'
+    'pass',
+    'fail'
     );
 
 CREATE TABLE "m_users" (
@@ -63,8 +64,8 @@ CREATE TABLE "m_applicant_datas" (
                                      "education_certificate" varchar,
                                      "ktp_photo" varchar,
                                      "health_document" varchar,
-                                     "updated_at" timestamp,
-                                     "created_at" timestamp NOT NULL DEFAULT (now())
+                                     "updated_at" timestamptz,
+                                     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "m_sex" (
@@ -111,7 +112,7 @@ CREATE TABLE "t_applicant_scores" (
                                       "address" integer,
                                       "final_score" float,
                                       "status_id" bigint,
-                                      "applied_at" timestamp NOT NULL DEFAULT (now())
+                                      "applied_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "m_applied_status" (
@@ -123,7 +124,8 @@ CREATE TABLE "m_jobs" (
                           "id" uuid PRIMARY KEY,
                           "title" varchar NOT NULL,
                           "description" varchar,
-                          "created_at" timestamp NOT NULL DEFAULT (now())
+                          "closed_at" timestamptz,
+                          "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "m_job_criterias" (
@@ -179,9 +181,10 @@ ALTER TABLE "t_test_results" ADD FOREIGN KEY ("applicant_id") REFERENCES "m_appl
 
 ALTER TABLE "t_test_results" ADD FOREIGN KEY ("question_id") REFERENCES "m_test_questions" ("id");
 
+
 -- default values
 INSERT INTO "m_roles" (roles) VALUES ('superadmin'),('president'),('human_resource'),('applicant');
 INSERT INTO "m_religion" (religion) VALUES ('islam'), ('kristen'), ('katolik'), ('hindu'), ('konghuchu');
 INSERT INTO "m_sex" (sex) VALUES ('male'), ('female');
 INSERT INTO "m_criteria" (criteria) VALUES ('experience'), ('education'), ('test'), ('health'), ('age'), ('address');
-INSERT INTO "m_applied_status" (applied_status) VALUES ('applied'), ('approved_by_hrd'), ('pass');
+INSERT INTO "m_applied_status" (applied_status) VALUES ('applied'), ('approved_by_hrd'), ('pass'), ('fail');
