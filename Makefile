@@ -14,6 +14,9 @@ connectdb:
 	docker exec -it dimnyan-psql bash
 	#psql -U root
 
+migratecreate:
+	migrate create -ext sql -dir db/migration/ -seq init_schema
+
 migrateup:
 	migrate -path db/migration -database "postgresql://root:12345@localhost:5433/karyawan_app?sslmode=disable" -verbose up
 
@@ -23,8 +26,11 @@ migratedown:
 sqlc:
 	sqlc generate
 
+test:
+	go test -v -cover ./...
+
 server:
 	go run main.go
 
 .PHONY:
-	postgres startdb createdb dropdb migrateup migratedown sqlc server
+	postgres startdb createdb dropdb migratecreate migrateup migratedown sqlc test server
