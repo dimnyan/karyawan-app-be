@@ -37,13 +37,13 @@ SET
     pob = $5,
     dob = $6,
     sex_id = $7,
-    city = $7,
     address = $8,
     religion_id = $9,
     application_letter =$10,
     cv = $11,
     education_certificate = $12,
     ktp_photo = $13,
-    health_document = $14
-WHERE id = $15
+    health_document = $14,
+    city = $15
+WHERE id = $16
 RETURNING *;
