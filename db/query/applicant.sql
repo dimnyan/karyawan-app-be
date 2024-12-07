@@ -44,6 +44,7 @@ SET
     education_certificate = $12,
     ktp_photo = $13,
     health_document = $14,
-    city = $15
+    city = $15,
+    updated_at = now()
 WHERE id = $16
 RETURNING *;

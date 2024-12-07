@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"mime/multipart"
 	"net/http"
@@ -10,7 +11,46 @@ import (
 
 const maxMemory = int64(1 * 1024 * 1024)
 
-func ImageChecker(c *gin.Context, file *multipart.FileHeader) {
+func ParseFileRequest(c *gin.Context, key string, id string, fileType string) string {
+
+	// Multipart Form
+	form, err := c.MultipartForm()
+	if err != nil {
+		ErrorResponse(err)
+	}
+
+	// take first
+	files := form.File[key]
+	fmt.Println(files)
+
+	if len(files) == 0 {
+		ErrorResponse(errors.New(fmt.Sprintf("file %s not exist", key)))
+		return ""
+	}
+
+	// path and naming
+	filename := ""
+	for _, file := range files {
+		filename = fmt.Sprintf("%s%s/%s%s.%s", "files/", key, id, ".", filepath.Ext(file.Filename))
+
+		if fileType == "image" {
+			err = ImageChecker(file)
+			if err != nil {
+				ErrorResponse(err)
+				return ""
+			}
+		}
+
+		fmt.Println(filename)
+		if err = c.SaveUploadedFile(file, filename); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse(err))
+			return ""
+		}
+	}
+	return filename
+}
+
+func ImageChecker(file *multipart.FileHeader) error {
 	allowedExt := []string{".jpg", ".jpeg", ".png"}
 
 	isAllowed := false
@@ -21,16 +61,12 @@ func ImageChecker(c *gin.Context, file *multipart.FileHeader) {
 	}
 
 	if !isAllowed {
-		c.JSON(http.StatusBadRequest, ErrorResponse(errors.New("file extension not allowed")))
-		return
+		//c.JSON(http.StatusBadRequest, ErrorResponse(errors.New("file extension not allowed")))
+		return errors.New("file extension not allowed")
 	}
 	if file.Size > maxMemory {
-		c.JSON(http.StatusBadRequest, ErrorResponse(errors.New("file size too big")))
-		return
+		//c.JSON(http.StatusBadRequest, ErrorResponse(errors.New("file size too big")))
+		return errors.New("file size too big")
 	}
-	filename := filepath.Base(file.Filename)
-	if err := c.SaveUploadedFile(file, filename); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse(errors.New("error saving file")))
-		return
-	}
+	return nil
 }

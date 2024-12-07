@@ -66,62 +66,40 @@ func (server *Server) RegisterApplicant(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, resp)
 }
 
-type ApplicantDataUpdateRequest struct {
-	ID                   string `json:"id"`
-	Name                 string `json:"name"`
-	PhoneNumber          string `json:"phone_number"`
-	Photo                string `json:"photo"`
-	Pob                  string `json:"pob"`
-	Dob                  string `json:"dob"`
-	SexID                int    `json:"sex_id"`
-	City                 string `json:"city"`
-	Address              string `json:"address"`
-	ReligionID           int    `json:"religion_id"`
-	ApplicationLetter    string `json:"application_letter"`
-	Cv                   string `json:"cv"`
-	EducationCertificate string `json:"education_certificate"`
-	KtpPhoto             string `json:"ktp_photo"`
-	HealthDocument       string `json:"health_document"`
-}
-
 type ApplicantDataUpdateResponse struct {
 	ID string `json:"id"`
 }
 
 func (server *Server) UpdateApplicantData(ctx *gin.Context) {
-	// ASSIGN REQUEST
-	var req ApplicantDataUpdateRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
 
 	// GET APPLICANT BY ID
-	applicant, err := server.store.GetApplicantById(ctx, uuid.MustParse(req.ID))
+	applicant, err := server.store.GetApplicantById(ctx, uuid.MustParse(ctx.PostForm("applicant_id")))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, utils.ErrorResponse(err))
+			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Applicant Not Found"))
 		}
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 	}
 
 	// UPDATE PARAMS
+	applicantId := ctx.PostForm("applicant_id")
 	applicantParams := db.UpdateApplicantByIdParams{
-		ID:                   uuid.MustParse(req.ID),
-		Name:                 sql.NullString{String: req.Name, Valid: true},
+		ID:                   uuid.MustParse(applicantId),
+		Name:                 sql.NullString{String: ctx.PostForm("name"), Valid: true},
 		Email:                applicant.Email,
-		PhoneNumber:          sql.NullString{String: req.PhoneNumber, Valid: true},
-		Photo:                sql.NullString{String: req.Photo, Valid: true},
-		Pob:                  sql.NullString{String: req.Pob, Valid: true},
-		Dob:                  sql.NullTime{Time: utils.ParseDate(req.Dob), Valid: true},
-		SexID:                sql.NullInt64{Int64: int64(req.SexID), Valid: true},
-		City:                 sql.NullString{String: req.City, Valid: true},
-		Address:              sql.NullString{String: req.Address, Valid: true},
-		ReligionID:           sql.NullInt64{Int64: int64(req.ReligionID), Valid: true},
-		ApplicationLetter:    sql.NullString{String: req.ApplicationLetter, Valid: true},
-		Cv:                   sql.NullString{String: req.Cv, Valid: true},
-		EducationCertificate: sql.NullString{String: req.EducationCertificate, Valid: true},
-		KtpPhoto:             sql.NullString{String: req.KtpPhoto, Valid: true},
-		HealthDocument:       sql.NullString{String: req.HealthDocument, Valid: true},
+		PhoneNumber:          sql.NullString{String: ctx.PostForm("phone_number"), Valid: true},
+		Photo:                sql.NullString{String: utils.ParseFileRequest(ctx, "photo", applicantId, "image"), Valid: true},
+		Pob:                  sql.NullString{String: ctx.PostForm("pob"), Valid: true},
+		Dob:                  sql.NullTime{Time: utils.ParseDate(ctx.PostForm("dob")), Valid: true},
+		SexID:                sql.NullInt64{Int64: int64(utils.StringToInt(ctx.PostForm("sex_id"))), Valid: true},
+		City:                 sql.NullString{String: ctx.PostForm("city"), Valid: true},
+		Address:              sql.NullString{String: ctx.PostForm("address"), Valid: true},
+		ReligionID:           sql.NullInt64{Int64: int64(utils.StringToInt(ctx.PostForm("religion_id"))), Valid: true},
+		ApplicationLetter:    sql.NullString{String: utils.ParseFileRequest(ctx, "application_letter", applicantId, "file"), Valid: true},
+		Cv:                   sql.NullString{String: utils.ParseFileRequest(ctx, "cv", applicantId, "file"), Valid: true},
+		EducationCertificate: sql.NullString{String: utils.ParseFileRequest(ctx, "education_certificate", applicantId, "file"), Valid: true},
+		KtpPhoto:             sql.NullString{String: utils.ParseFileRequest(ctx, "ktp_photo", applicantId, "file"), Valid: true},
+		HealthDocument:       sql.NullString{String: utils.ParseFileRequest(ctx, "health_document", applicantId, "file"), Valid: true},
 	}
 
 	// UPDATE BY ID
@@ -156,19 +134,21 @@ type ApplicantDataGetResponse struct {
 	EducationCertificate string `json:"education_certificate"`
 	KtpPhoto             string `json:"ktp_photo"`
 	HealthDocument       string `json:"health_document"`
+	UpdatedAt            string `json:"updated_at"`
+	CreatedAt            string `json:"created_at"`
 }
 
 func (server *Server) GetApplicantById(ctx *gin.Context) {
 	var req ApplicantDataGetRequest
 	var resp ApplicantDataGetResponse
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorMessage("ID URI Not Found"))
 	}
 
 	applicantById, err := server.store.GetApplicantById(ctx, uuid.MustParse(req.ID))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, utils.ErrorResponse(err))
+			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Applicant Not Found"))
 		}
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 	}
@@ -189,6 +169,8 @@ func (server *Server) GetApplicantById(ctx *gin.Context) {
 	resp.EducationCertificate = applicantById.EducationCertificate.String
 	resp.KtpPhoto = applicantById.KtpPhoto.String
 	resp.HealthDocument = applicantById.HealthDocument.String
+	resp.UpdatedAt = applicantById.UpdatedAt.Time.String()
+	resp.CreatedAt = applicantById.CreatedAt.String()
 
 	ctx.JSON(http.StatusOK, resp)
 }
