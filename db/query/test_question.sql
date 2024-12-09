@@ -17,10 +17,10 @@ WHERE job_id = $1;
 -- name: UpdateTestQuestion :one
 UPDATE m_test_questions
 SET
-    job_id = $1,
-    question = $2,
-    answer = $3
-WHERE id = $4
+    job_id = $1, question = $2, choice_a = $3,
+    choice_b = $4, choice_c = $5, choice_d = $6,
+    answer = $7
+WHERE id = $8
 RETURNING *;
 
 -- name: DeleteTestQuestionById :one
