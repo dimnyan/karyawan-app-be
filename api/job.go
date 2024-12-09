@@ -257,10 +257,17 @@ type UpdateJobRequest struct {
 	ClosedAt    int    `json:"closed_at" binding:"required"`
 }
 
+type UpdateJobResponse struct {
+	ID          string `json:"id"`
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description" binding:"required"`
+	ClosedAt    int    `json:"closed_at" binding:"required"`
+}
+
 func (server *Server) UpdateJob(ctx *gin.Context) {
 	var req UpdateJobRequest
 	var idReq JobIDRequest
-	var res GetJobIDResponse
+	var res UpdateJobResponse
 	//var criteriaList []GetJobCriteriaFromJobIDResponse
 
 	if err := ctx.BindUri(&idReq); err != nil {
