@@ -66,3 +66,26 @@ func (server *Server) GetQuestionList(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, questions)
 }
+
+type GetQuestionByIdRequest struct {
+	ID string `uri:"id" required:"true"`
+}
+
+func (server *Server) GetQuestionById(ctx *gin.Context) {
+	var req GetQuestionByIdRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorMessage("URI ID Failed"))
+		return
+	}
+
+	question, err := server.store.GetQuestionById(ctx, uuid.MustParse(req.ID))
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Question not found"))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Cannot get test question"))
+		return
+	}
+	ctx.JSON(http.StatusOK, question)
+}

@@ -38,7 +38,7 @@ func NewServer(store db.Store) *Server {
 	// Questions
 	router.POST("/api/v1/question", server.CreateQuestion)
 	router.GET("/api/v1/question", server.GetQuestionList)
-	//router.GET("/api/v1/question/:id", server.GetQuestionById)
+	router.GET("/api/v1/question/:id", server.GetQuestionById)
 
 	server.router = router
 	return server
