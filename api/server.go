@@ -22,6 +22,14 @@ func NewServer(store db.Store) *Server {
 	router.PUT("/api/v1/applicants/data", server.UpdateApplicantData)
 	router.GET("/api/v1/applicants/data/:id", server.GetApplicantById)
 	router.POST("/api/v1/auth/login", server.Login)
+	router.POST("/api/v1/auth/logout", server.Logout)
+	router.POST("/api/v1/auth/checkToken", server.CheckToken)
+	router.POST("/api/v1/jobs", server.CreateNewJob)
+	router.GET("/api/v1/jobs/:id", server.GetJobByID)
+	router.GET("/api/v1/jobs", server.GetJobList)
+	router.DELETE("/api/v1/jobs/:id", server.DeleteJob)
+	router.PUT("/api/v1/jobs/:id", server.UpdateJob)
+
 	//router.GET("/accounts/:id", server.getAccount)
 	//router.GET("/accounts", server.listAccount)
 

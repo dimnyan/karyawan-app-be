@@ -4,16 +4,20 @@ VALUES ( $1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetJobs :many
-SELECT * FROM m_jobs;
-
--- name: GetJob :one
 SELECT * FROM m_jobs
-WHERE id = $1;
+    JOIN m_job_criterias
+        ON m_jobs.id = m_job_criterias.job_id;
+
+-- name: GetJobById :many
+SELECT * FROM m_jobs
+    JOIN m_job_criterias
+         ON m_jobs.id = m_job_criterias.job_id
+WHERE m_jobs.id = $1;
 
 -- name: UpdateJob :one
 UPDATE m_jobs
-SET id = $1, title = $2, description = $3
-WHERE id = $4
+SET id = $1, title = $2, description = $3, closed_at = $4
+WHERE id = $5
     RETURNING *;
 
 -- name: DeleteJob :one
