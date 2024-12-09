@@ -112,8 +112,16 @@ func (server *Server) GetJobByID(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Invalid URI"))
 		return
 	}
+	if err := uuid.Validate(req.ID); err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Invalid Job ID not UUID"))
+		return
+	}
 	// Get Job
 	job, err := server.store.GetJobById(ctx, uuid.MustParse(req.ID))
+	if len(job) == 0 {
+		ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Job not found"))
+		return
+	}
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Job not found"))
@@ -139,9 +147,6 @@ func (server *Server) GetJobByID(ctx *gin.Context) {
 		resp.JobCriteriaList = criteriaList
 		resp.ClosedAt = int(job[0].ClosedAt)
 	}
-
-	fmt.Println(job)
-	//fmt.Println(job[0])
 	ctx.JSON(http.StatusOK, resp)
 }
 
@@ -242,29 +247,29 @@ func (server *Server) DeleteJob(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
+type JobIDRequest struct {
+	ID string `uri:"id" binding:"required"`
+}
+
 type UpdateJobRequest struct {
-	ID          string `uri:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	ClosedAt    int    `json:"closed_at"`
-	JobCriteriaParams
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description" binding:"required"`
+	ClosedAt    int    `json:"closed_at" binding:"required"`
 }
 
 func (server *Server) UpdateJob(ctx *gin.Context) {
 	var req UpdateJobRequest
+	var idReq JobIDRequest
 	var res GetJobIDResponse
-	var criteriaList []GetJobCriteriaFromJobIDResponse
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	//var criteriaList []GetJobCriteriaFromJobIDResponse
+
+	if err := ctx.BindUri(&idReq); err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Invalid URI"))
 		return
 	}
-	// Delete Criteria
-	if _, err := server.store.DeleteJobCriteriaByJobId(ctx, uuid.MustParse(req.ID)); err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Job Criteria not found"))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Error Deleting Job Criteria"))
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		fmt.Println(req.Title)
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Invalid JSON body"))
 		return
 	}
 	// Update Job Params
@@ -272,40 +277,18 @@ func (server *Server) UpdateJob(ctx *gin.Context) {
 		Title:       req.Title,
 		Description: sql.NullString{String: req.Description, Valid: true},
 		ClosedAt:    int32(req.ClosedAt),
+		ID:          uuid.MustParse(idReq.ID),
 	}
 	// Update Job
 	job, err := server.store.UpdateJob(ctx, jobArgs)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Job not found"))
-			return
-		}
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Error Updating Job"))
 		return
 	}
-	// Create job criteria
+	// Assign Response
 	res.ID = job.ID.String()
 	res.Title = job.Title
 	res.Description = job.Description.String
 	res.ClosedAt = int(job.ClosedAt)
-	if len(criteriaList) > 0 {
-		for _, criteriaId := range req.Criteria {
-			criteriaIdInt := utils.StringToInt(criteriaId)
-			args := db.CreateJobCriteriaParams{
-				CriteriaID: int64(criteriaIdInt),
-			}
-			criteria, err := server.store.CreateJobCriteria(ctx, args)
-			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Error Creating Job Criteria"))
-				return
-			}
-			// Add to Response
-			criteriaList = append(criteriaList, GetJobCriteriaFromJobIDResponse{
-				ID:       criteria.ID.String(),
-				Criteria: criteria.CriteriaID,
-			})
-		}
-	}
-	res.JobCriteriaList = criteriaList
 	ctx.JSON(http.StatusOK, res)
 }

@@ -16,8 +16,10 @@ WHERE m_jobs.id = $1;
 
 -- name: UpdateJob :one
 UPDATE m_jobs
-SET id = $1, title = $2, description = $3, closed_at = $4
-WHERE id = $5
+SET title = $1,
+    description = $2,
+    closed_at = $3
+WHERE id = $4
     RETURNING *;
 
 -- name: DeleteJob :one
