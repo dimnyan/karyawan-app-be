@@ -1,6 +1,6 @@
 -- name: CreateTestQuestion :one
-INSERT INTO m_test_questions ( id, job_id, question, answer)
-VALUES ( $1, $2, $3, $4)
+INSERT INTO m_test_questions ( id, job_id, question, choice_a, choice_b, choice_c, choice_d, answer)
+VALUES ( $1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
 -- name: GetTestQuestionsByJobId :many

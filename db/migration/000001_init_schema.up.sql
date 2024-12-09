@@ -141,8 +141,12 @@ CREATE TABLE "m_criteria" (
 
 CREATE TABLE "m_test_questions" (
                                     "id" uuid PRIMARY KEY,
-                                    "job_id" uuid,
+                                    "job_id" uuid NOT NULL,
                                     "question" varchar NOT NULL,
+                                    "choice_a" varchar NOT NULL,
+                                    "choice_b" varchar NOT NULL,
+                                    "choice_c" varchar NOT NULL,
+                                    "choice_d" varchar NOT NULL,
                                     "answer" varchar NOT NULL
 );
 
@@ -173,8 +177,6 @@ ALTER TABLE "t_applicant_scores" ADD FOREIGN KEY ("status_id") REFERENCES "m_app
 
 ALTER TABLE "m_job_criterias" ADD FOREIGN KEY ("criteria_id") REFERENCES "m_criteria" ("id");
 
-ALTER TABLE "m_job_criterias" ADD CONSTRAINT unique_col2_col3 UNIQUE ("job_id", "criteria_id");
-
 ALTER TABLE "m_test_questions" ADD FOREIGN KEY ("job_id") REFERENCES "m_jobs" ("id");
 
 ALTER TABLE "t_test_results" ADD FOREIGN KEY ("applicant_id") REFERENCES "m_applicant_datas" ("id");
@@ -184,6 +186,7 @@ ALTER TABLE "t_test_results" ADD FOREIGN KEY ("question_id") REFERENCES "m_test_
 ALTER TABLE "m_job_criterias" ADD FOREIGN KEY ("job_id") REFERENCES "m_jobs" ("id") ON DELETE CASCADE;
 
 -- default values
+ALTER TABLE "m_job_criterias" ADD CONSTRAINT unique_col2_col3 UNIQUE ("job_id", "criteria_id");
 INSERT INTO "m_roles" (roles) VALUES ('superadmin'),('president'),('human_resource'),('applicant');
 INSERT INTO "m_religion" (religion) VALUES ('islam'), ('kristen'), ('katolik'), ('hindu'), ('konghuchu');
 INSERT INTO "m_sex" (sex) VALUES ('male'), ('female');

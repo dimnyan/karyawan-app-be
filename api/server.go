@@ -18,22 +18,27 @@ func NewServer(store db.Store) *Server {
 	router.MaxMultipartMemory = 8 << 20
 
 	// Add routes to router
+	// Applicant
 	router.POST("/api/v1/applicants/register", server.RegisterApplicant)
 	router.PUT("/api/v1/applicants/data", server.UpdateApplicantData)
 	router.GET("/api/v1/applicants/data/:id", server.GetApplicantById)
+	// Auth
 	router.POST("/api/v1/auth/login", server.Login)
 	router.POST("/api/v1/auth/logout", server.Logout)
 	router.POST("/api/v1/auth/checkToken", server.CheckToken)
+	// Job
 	router.POST("/api/v1/jobs", server.CreateNewJob)
 	router.GET("/api/v1/jobs/:id", server.GetJobByID)
 	router.GET("/api/v1/jobs", server.GetJobList)
 	router.DELETE("/api/v1/jobs/:id", server.DeleteJob)
 	router.PUT("/api/v1/jobs/:id", server.UpdateJob)
+	// Job criteria
 	router.POST("/api/v1/jobs/criteria", server.AddJobCriteria)
 	router.DELETE("/api/v1/jobs/criteria/:id", server.DeleteJobCriteria)
-
-	//router.GET("/accounts/:id", server.getAccount)
-	//router.GET("/accounts", server.listAccount)
+	// Questions
+	router.POST("/api/v1/question", server.CreateQuestion)
+	//router.GET("/api/v1/question", server.GetListQuestion)
+	//router.GET("/api/v1/question/:id", server.GetQuestionById)
 
 	server.router = router
 	return server
