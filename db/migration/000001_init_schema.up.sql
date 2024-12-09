@@ -124,14 +124,14 @@ CREATE TABLE "m_jobs" (
                           "id" uuid PRIMARY KEY,
                           "title" varchar NOT NULL,
                           "description" varchar,
-                          "closed_at" timestamptz,
+                          "closed_at" integer NOT NULL,
                           "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "m_job_criterias" (
                                    "id" uuid PRIMARY KEY,
-                                   "job_id" uuid,
-                                   "criteria_id" bigint
+                                   "job_id" uuid NOT NULL,
+                                   "criteria_id" bigint NOT NULL
 );
 
 CREATE TABLE "m_criteria" (
@@ -171,8 +171,6 @@ ALTER TABLE "t_applicant_scores" ADD FOREIGN KEY ("applicant_id") REFERENCES "m_
 
 ALTER TABLE "t_applicant_scores" ADD FOREIGN KEY ("status_id") REFERENCES "m_applied_status" ("id");
 
-ALTER TABLE "m_job_criterias" ADD FOREIGN KEY ("job_id") REFERENCES "m_jobs" ("id");
-
 ALTER TABLE "m_job_criterias" ADD FOREIGN KEY ("criteria_id") REFERENCES "m_criteria" ("id");
 
 ALTER TABLE "m_test_questions" ADD FOREIGN KEY ("job_id") REFERENCES "m_jobs" ("id");
@@ -181,6 +179,7 @@ ALTER TABLE "t_test_results" ADD FOREIGN KEY ("applicant_id") REFERENCES "m_appl
 
 ALTER TABLE "t_test_results" ADD FOREIGN KEY ("question_id") REFERENCES "m_test_questions" ("id");
 
+ALTER TABLE "m_job_criterias" ADD FOREIGN KEY ("job_id") REFERENCES "m_jobs" ("id") ON DELETE CASCADE;
 
 -- default values
 INSERT INTO "m_roles" (roles) VALUES ('superadmin'),('president'),('human_resource'),('applicant');
