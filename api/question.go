@@ -32,13 +32,14 @@ func (server *Server) CreateQuestion(ctx *gin.Context) {
 	}
 
 	args := db.CreateTestQuestionParams{
-		ID:      uuid.New(),
-		JobID:   uuid.MustParse(req.JobID),
-		ChoiceA: req.ChoiceA,
-		ChoiceB: req.ChoiceB,
-		ChoiceC: req.ChoiceC,
-		ChoiceD: req.ChoiceD,
-		Answer:  req.Answer,
+		ID:       uuid.New(),
+		JobID:    uuid.MustParse(req.JobID),
+		Question: req.Question,
+		ChoiceA:  req.ChoiceA,
+		ChoiceB:  req.ChoiceB,
+		ChoiceC:  req.ChoiceC,
+		ChoiceD:  req.ChoiceD,
+		Answer:   req.Answer,
 	}
 	_, err := server.store.CreateTestQuestion(ctx, args)
 	if err != nil {
@@ -52,4 +53,16 @@ func (server *Server) CreateQuestion(ctx *gin.Context) {
 	resp.ID = args.ID.String()
 	resp.CreateTestQuestionRequest = req
 	ctx.JSON(http.StatusCreated, resp)
+}
+
+func (server *Server) GetQuestionList(ctx *gin.Context) {
+	questions, err := server.store.GetTestQuestions(ctx)
+	if len(questions) == 0 {
+		ctx.JSON(http.StatusNotFound, utils.ErrorMessage("No questions found"))
+	}
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Cannot get test questions"))
+		return
+	}
+	ctx.JSON(http.StatusOK, questions)
 }

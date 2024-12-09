@@ -37,7 +37,7 @@ func NewServer(store db.Store) *Server {
 	router.DELETE("/api/v1/jobs/criteria/:id", server.DeleteJobCriteria)
 	// Questions
 	router.POST("/api/v1/question", server.CreateQuestion)
-	//router.GET("/api/v1/question", server.GetListQuestion)
+	router.GET("/api/v1/question", server.GetQuestionList)
 	//router.GET("/api/v1/question/:id", server.GetQuestionById)
 
 	server.router = router

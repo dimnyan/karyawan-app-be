@@ -3,12 +3,11 @@ INSERT INTO m_test_questions ( id, job_id, question, choice_a, choice_b, choice_
 VALUES ( $1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
--- name: GetTestQuestionsByJobId :many
-SELECT id, job_id, question FROM m_test_questions
-WHERE job_id = $1;
+-- name: GetTestQuestions :many
+SELECT * FROM m_test_questions;
 
--- name: GetTestAnswerByJobId :many
-SELECT id, job_id, answer FROM m_test_questions
+-- name: GetTestAnswerByJobId :one
+SELECT * FROM m_test_questions
 WHERE job_id = $1;
 
 -- name: UpdateTestQuestion :one
