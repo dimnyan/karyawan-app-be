@@ -36,9 +36,9 @@ RETURNING *;
 SELECT * FROM m_job_criterias
 WHERE job_id = $1;
 
--- name: DeleteJobCriteria :one
+-- name: DeleteJobCriteriaById :one
 DELETE FROM m_job_criterias
-WHERE job_id = $1
+WHERE id = $1
 RETURNING *;
 
 -- name: DeleteJobCriteriaByJobId :many

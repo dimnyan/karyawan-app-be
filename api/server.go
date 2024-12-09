@@ -29,6 +29,8 @@ func NewServer(store db.Store) *Server {
 	router.GET("/api/v1/jobs", server.GetJobList)
 	router.DELETE("/api/v1/jobs/:id", server.DeleteJob)
 	router.PUT("/api/v1/jobs/:id", server.UpdateJob)
+	router.POST("/api/v1/jobs/criteria", server.AddJobCriteria)
+	router.DELETE("/api/v1/jobs/criteria/:id", server.DeleteJobCriteria)
 
 	//router.GET("/accounts/:id", server.getAccount)
 	//router.GET("/accounts", server.listAccount)

@@ -2,13 +2,13 @@ package api
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	db "karyawan-app-be/db/sqlc"
 	"karyawan-app-be/utils"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type JobCriteriaParams struct {
@@ -275,7 +275,7 @@ func (server *Server) UpdateJob(ctx *gin.Context) {
 		return
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		fmt.Println(req.Title)
+		//fmt.Println(req.Title)
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Invalid JSON body"))
 		return
 	}
@@ -297,5 +297,89 @@ func (server *Server) UpdateJob(ctx *gin.Context) {
 	res.Title = job.Title
 	res.Description = job.Description.String
 	res.ClosedAt = int(job.ClosedAt)
+	ctx.JSON(http.StatusOK, res)
+}
+
+type AddJobCriteriaRequest struct {
+	JobID       string `json:"job_id" binding:"required"`
+	JobCriteria int    `json:"job_criteria" binding:"required"`
+}
+
+type AddJobCriteriaResponse struct {
+	Status      string `json:"status"`
+	ID          string `json:"id"`
+	JobID       string `json:"job_id" binding:"required"`
+	JobCriteria int64  `json:"job_criteria" binding:"required"`
+}
+
+func (server *Server) AddJobCriteria(ctx *gin.Context) {
+	var req AddJobCriteriaRequest
+	var res AddJobCriteriaResponse
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorMessage("Invalid JSON body"))
+		return
+	}
+	if err := uuid.Validate(req.JobID); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorMessage("Invalid Job ID not UUID"))
+		return
+	}
+	// check by job id
+	jobById, err := server.store.GetJobById(ctx, uuid.MustParse(req.JobID))
+	if err != nil {
+		if err == sql.ErrNoRows || jobById[0].ID == uuid.Nil {
+			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Job not found"))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Job not found"))
+		return
+	}
+	arg := db.CreateJobCriteriaParams{
+		ID:         uuid.New(),
+		JobID:      uuid.MustParse(req.JobID),
+		CriteriaID: int64(req.JobCriteria),
+	}
+	criteria, err := server.store.CreateJobCriteria(ctx, arg)
+	if err != nil {
+		//fmt.Println(err.Error())
+		if strings.Contains(err.Error(), "violates unique constraint") {
+			ctx.JSON(http.StatusConflict, utils.ErrorMessage("Job criteria on Job ID already exists"))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Error Adding Job Criteria"))
+		return
+	}
+	// assign response
+	res.Status = "success"
+	res.ID = criteria.ID.String()
+	res.JobID = criteria.JobID.String()
+	res.JobCriteria = criteria.CriteriaID
+	ctx.JSON(http.StatusCreated, criteria)
+}
+
+type DeleteJobCriteriaRequest struct {
+	ID string `uri:"id" binding:"required"`
+}
+type DeleteJobCriteriaResponse struct {
+	Status string `json:"status"`
+	ID     string `json:"id"`
+}
+
+func (server *Server) DeleteJobCriteria(ctx *gin.Context) {
+	var req DeleteJobCriteriaRequest
+	var res DeleteJobCriteriaResponse
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Invalid URI"))
+		return
+	}
+	criteria, err := server.store.DeleteJobCriteriaById(ctx, uuid.MustParse(req.ID))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, utils.ErrorMessage("Job criteria not found"))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorMessage("Error Deleting Job Criteria"))
+	}
+	res.ID = criteria.ID.String()
+	res.Status = "success"
 	ctx.JSON(http.StatusOK, res)
 }

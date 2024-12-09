@@ -173,6 +173,8 @@ ALTER TABLE "t_applicant_scores" ADD FOREIGN KEY ("status_id") REFERENCES "m_app
 
 ALTER TABLE "m_job_criterias" ADD FOREIGN KEY ("criteria_id") REFERENCES "m_criteria" ("id");
 
+ALTER TABLE "m_job_criterias" ADD CONSTRAINT unique_col2_col3 UNIQUE ("job_id", "criteria_id");
+
 ALTER TABLE "m_test_questions" ADD FOREIGN KEY ("job_id") REFERENCES "m_jobs" ("id");
 
 ALTER TABLE "t_test_results" ADD FOREIGN KEY ("applicant_id") REFERENCES "m_applicant_datas" ("id");
